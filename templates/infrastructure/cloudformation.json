@@ -15,11 +15,6 @@
       "Type": "String",
       "Default": ""
     },
-    "CFHostedZoneName": {
-      "Description": "Route53 Hosted Zone in which to register the CF ELB's DNS record.",
-      "Type": "String",
-      "Default": ""
-    },
 
     "ELBRecordSetName": {
       "Description": "(Optional) Route53 Record Set name for the ELB.",
@@ -58,20 +53,10 @@
       "Type": "String",
       "Default": "10.0.16.0/24"
     },
-    "CFSubnetCIDR": {
-      "Description": "CIDR block for the CF Deployment subnet.",
-      "Type": "String",
-      "Default": "10.0.15.0/24"
-    },
     "ConcourseLoadBalancerCertName": {
       "Description": "Name of the SSL cert to use for the concourse ELB.",
       "Type": "String",
       "Default": "concourse"
-    },
-    "CFLoadBalancerCertName": {
-      "Description": "Name of the SSL cert to use for the CF ELB.",
-      "Type": "String",
-      "Default": ""
     }
   },
 
@@ -103,14 +88,9 @@
         }
       ]
     },
-    "CreateCFHostedZone": {
+    "CreateHostedZone": {
       "Fn::Not": [
-        { "Fn::Equals": [{ "Ref": "CFHostedZoneName" }, ""] }
-      ]
-    },
-    "CreateCFLoadBalancer": {
-      "Fn::Not": [
-        { "Fn::Equals": [{ "Ref": "CFLoadBalancerCertName" }, ""] }
+        { "Fn::Equals": [{ "Ref": "ConcourseHostedZoneName" }, ""] }
       ]
     }
   },
@@ -273,23 +253,6 @@
       }
     },
 
-    "CFSecurityGroup": {
-      "Type": "AWS::EC2::SecurityGroup",
-      "Properties": {
-        "VpcId": { "Ref": "VPC" },
-        "GroupDescription": "CF Public Security Group",
-        "SecurityGroupEgress": [],
-        "SecurityGroupIngress": [
-          {
-            "CidrIp": "10.0.0.0/16",
-            "IpProtocol": "-1",
-            "FromPort": "0",
-            "ToPort": "65535"
-          }
-        ]
-      }
-    },
-
     "NATSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
@@ -405,24 +368,6 @@
       }
     },
 
-    "CFSubnet": {
-      "Type": "AWS::EC2::Subnet",
-      "Properties": {
-        "AvailabilityZone": { "Fn::Select": ["0", { "Fn::GetAZs": { "Ref" : "AWS::Region" } }] },
-        "CidrBlock": { "Ref": "CFSubnetCIDR" },
-        "VpcId": { "Ref": "VPC" },
-        "Tags": [{ "Key": "Name", "Value": "cf1" }]
-      }
-    },
-
-    "CFSubnetRouteTableAssociation": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "RouteTableId": { "Ref": "PublicRouteTable" },
-        "SubnetId": { "Ref": "CFSubnet" }
-      }
-    },
-
     "LoadBalancerSubnet": {
       "Type": "AWS::EC2::Subnet",
       "Properties": {
@@ -503,6 +448,14 @@
       }
     },
 
+    "ConcourseHostedZone": {
+      "Type": "AWS::Route53::HostedZone",
+      "Condition": "CreateHostedZone",
+      "Properties": {
+        "Name": { "Ref": "ConcourseHostedZoneName" }
+      }
+    },
+
     "ConcourseELBRecordSet": {
       "Type": "AWS::Route53::RecordSetGroup",
       "Condition": "CreateRecordSet",
@@ -527,97 +480,6 @@
               }
             }
           }
-        ]
-      }
-    },
-
-    "CFLoadBalancer": {
-      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
-      "Condition": "CreateCFLoadBalancer",
-
-      "Properties": {
-        "Subnets": [{ "Ref": "LoadBalancerSubnet" }],
-        "SecurityGroups": [{ "Ref": "LoadBalancerSecurityGroup" }],
-
-        "HealthCheck": {
-          "HealthyThreshold": "2",
-          "Interval": "30",
-          "Target": "tcp:80",
-          "Timeout": "5",
-          "UnhealthyThreshold": "10"
-        },
-
-        "Listeners": [
-          {
-            "Protocol": "http",
-            "LoadBalancerPort": "80",
-            "InstanceProtocol": "http",
-            "InstancePort": "80"
-          },
-          {
-            "Protocol": "https",
-            "LoadBalancerPort": "443",
-            "InstanceProtocol": "http",
-            "InstancePort": "80",
-            "SSLCertificateId" : {
-              "Fn::Join":[
-                "",
-                [
-                  "arn:aws:iam::",
-                  {
-                    "Ref":"AWS::AccountId"
-                  },
-                  ":server-certificate/",
-                  {
-                    "Ref":"CFLoadBalancerCertName"
-                  }
-                ]
-              ]
-            }
-          },
-          {
-            "Protocol" : "ssl",
-            "LoadBalancerPort" : "4443",
-            "InstanceProtocol": "tcp",
-            "InstancePort" : "80",
-            "SSLCertificateId" : {
-              "Fn::Join":[
-                "",
-                [
-                  "arn:aws:iam::",
-                  {
-                    "Ref":"AWS::AccountId"
-                  },
-                  ":server-certificate/",
-                  {
-                    "Ref":"CFLoadBalancerCertName"
-                  }
-                ]
-              ]
-            }
-          }
-        ]
-      }
-    },
-
-    "CFHostedZone": {
-      "Type": "AWS::Route53::HostedZone",
-      "Condition": "CreateCFHostedZone",
-      "Properties": {
-        "Name": { "Ref": "CFHostedZoneName" }
-      }
-    },
-
-    "CFEIPRecordSet": {
-      "Type": "AWS::Route53::RecordSet",
-      "Condition": "CreateCFHostedZone",
-      "Properties": {
-        "HostedZoneId": { "Ref": "CFHostedZone" },
-        "Name": { "Fn::Join" : [ "", [ "*.", {"Ref" : "CFHostedZoneName"} ,"."]] },
-        "Type": "CNAME",
-        "TTL": "300",
-        "ResourceRecords" : [
-          { "Fn::GetAtt": ["CFLoadBalancer","CanonicalHostedZoneName"] }
         ]
       }
     },

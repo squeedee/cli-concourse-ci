@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set -e -x
+
+script_dir=$(dirname $0)
+
+source ${script_dir}/lib/deployment_utils
+
+require_deployment_dir
+
+if [ $# -ne 2 ]; then
+  set +x
+  echo "Expected 2 arguments, received $#"
+  echo
+  echo "Usage:"
+  echo "  $0 <job> <job_index>"
+  exit 1
+fi
+
+job=$1
+index=$2
+
+source ${DEPLOYMENT_DIR}/bosh_environment
+
+bosh_ip=$(echo ${BOSH_DIRECTOR} | awk -F/ '{print $3}' | awk -F: '{print $1}')
+
+bosh ssh ${job} ${index} --gateway_user vcap --gateway_host ${bosh_ip} --strict_host_key_checking no

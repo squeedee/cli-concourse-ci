@@ -1,0 +1,9 @@
+#!/bin/bash
+
+require_deployment_dir() {
+  if [ -z ${DEPLOYMENT_DIR} ] || [ ! -d ${DEPLOYMENT_DIR} ]; then
+    set +x
+    echo '$DEPLOYMENT_DIR must be set to your deployment directory'
+    exit 1
+  fi
+}

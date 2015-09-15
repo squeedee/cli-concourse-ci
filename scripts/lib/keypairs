@@ -1,0 +1,14 @@
+#!/bin/bash
+
+require_command jq
+require_command aws
+require_deployment_dir
+
+create_keypair() {
+  mkdir -p ${DEPLOYMENT_DIR}/artifacts/keypair
+
+  keyname=$1
+  if ! aws ec2 describe-key-pairs --key-names ${keyname}; then
+    aws ec2 create-key-pair --key-name ${keyname} | jq -r .KeyMaterial > ${DEPLOYMENT_DIR}/artifacts/keypair/id_rsa_${keyname}
+  fi
+}

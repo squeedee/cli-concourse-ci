@@ -1,0 +1,63 @@
+#!/bin/bash
+
+require_command jq
+require_command aws
+require_deployment_dir
+
+cloud_form() {
+  stack_name=$1
+  properties_path=${DEPLOYMENT_DIR}/cloud_formation/${stack_name}_properties.json
+  formation_path=${scripts_dir}/../templates/infrastructure/${stack_name}_cloudformation.json
+
+
+  if ! aws cloudformation describe-stacks --stack-name ${stack_name} ; then
+    if [ -e  ${properties_path} ]; then
+      aws cloudformation create-stack \
+        --stack-name ${stack_name} \
+        --template-body file://${formation_path} \
+        --parameters file://${properties_path}
+    else
+      aws cloudformation create-stack \
+        --stack-name ${stack_name} \
+        --template-body file://${formation_path}
+    fi
+  else
+    if [ -e ${DEPLOYMENT_DIR}/cloud_formation/properties.json ]; then
+      aws cloudformation update-stack \
+        --stack-name ${stack_name} \
+        --template-body file://${formation_path} \
+        --parameters file://${properties_path} || true # update-stack is not idempotent :(
+    else
+      aws cloudformation update-stack \
+            --stack-name ${stack_name} \
+            --template-body file://${formation_path} || true # update-stack is not idempotent :(
+    fi
+  fi
+
+  while aws cloudformation describe-stacks --stack-name ${stack_name} | grep StackStatus | grep IN_PROGRESS ; do
+    echo "CloudFormation stack '${stack_name}' still in progress..."
+    sleep 15
+  done
+
+  if aws cloudformation describe-stacks --stack-name ${stack_name} | grep StackStatus | grep ROLLBACK ; then
+    echo 'Cloud formation failure'
+    exit 1
+  fi
+
+  if ! aws cloudformation describe-stacks --stack-name ${stack_name} | grep StackStatus | grep COMPLETE ; then
+    echo 'Cloud formation failure'
+    exit 1
+  fi
+
+}
+
+get_stub_from_stack() {
+  mkdir -p generated-stubs
+
+  stack_name=$1
+
+  # generate AWS resources stub for shared purposes
+  aws cloudformation describe-stack-resources --stack-name ${stack_name} \
+    | jq '.StackResources|map({key: .LogicalResourceId, value: .PhysicalResourceId}) | from_entries as $body | {Resources: $body}' \
+    > generated-stubs/${stack_name}-aws-resources.json
+}

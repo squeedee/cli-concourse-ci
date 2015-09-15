@@ -146,7 +146,7 @@ my_deployment_dir/
 |  |- concourse.key
 |  |- (concourse_chain.pem, optional)
 |- cloud_formation/
-|  |- (properties.json, optional)
+|  |- (bosh_properties.json, optional)
 |- stubs/
    |- bosh/
    |  |- bosh_passwords.yml

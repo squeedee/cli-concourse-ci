@@ -6,6 +6,8 @@
 set -e -x
 scripts_dir=$(cd $(dirname $0)/..; pwd)
 source ${scripts_dir}/lib/dependencies
+source ${scripts_dir}/lib/keypairs
+source ${scripts_dir}/lib/cloudformation
 
 ############
 
@@ -34,20 +36,17 @@ cat > generated-stubs/director_uuid.yml <<EOF
 director_uuid: ${BOSH_UUID}
 EOF
 
-# generate AWS resources stub for shared purposes
-aws cloudformation describe-stack-resources --stack-name concourse \
-  | jq '.StackResources|map({key: .LogicalResourceId, value: .PhysicalResourceId}) | from_entries as $body | {Resources: $body}' \
-  > generated-stubs/aws-resources.json
+get_stub_from_stack bosh
 
 # Generate the cloud propeties stub
-SUBNET_ID=$(cat generated-stubs/aws-resources.json | jq -r .Resources.ConcourseSubnet)
+SUBNET_ID=$(cat generated-stubs/bosh-aws-resources.json | jq -r .Resources.ConcourseSubnet)
 
-CONCOURSE_SECURITY_GROUP_ID=$(cat generated-stubs/aws-resources.json | jq -r .Resources.ConcourseSecurityGroup)
+CONCOURSE_SECURITY_GROUP_ID=$(cat generated-stubs/bosh-aws-resources.json | jq -r .Resources.ConcourseSecurityGroup)
 CONCOURSE_SECURITY_GROUP_NAME=$(aws ec2 describe-security-groups --group-ids ${CONCOURSE_SECURITY_GROUP_ID} | jq .SecurityGroups[0].GroupName)
 
 AWS_ZONE=$(aws ec2 describe-subnets --subnet-ids ${SUBNET_ID} | jq -r .Subnets[0].AvailabilityZone)
 
-LOAD_BALANCER=$(cat generated-stubs/aws-resources.json | jq -r .Resources.ConcourseLoadBalancer)
+LOAD_BALANCER=$(cat generated-stubs/bosh-aws-resources.json | jq -r .Resources.ConcourseLoadBalancer)
 
 cat > generated-stubs/cloud_properties.yml <<EOF
 ---

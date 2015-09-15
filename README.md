@@ -34,6 +34,8 @@ where all these elegant encapsulations were created.
 
 * The `spiff` command line tool. The latest release can be found [here]
   [spiff-releases].
+  
+* yaml2json. This can be installed by running `go get github.com/peter-edge/go-yaml2json/cmd/yaml2json`
 
 ## Deployment Directory Details
 

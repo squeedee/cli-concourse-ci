@@ -1,19 +1,22 @@
 #!/bin/bash
 
+############
+# SETUP
+
 set -e -x
+scripts_dir=$(cd $(dirname $0)/..; pwd)
+source ${scripts_dir}/lib/dependencies
 
-script_dir=$(dirname $0)
-
-source ${script_dir}/lib/deployment_utils
+############
 
 require_deployment_dir
 require_aws_environment
 require_bosh_environment
 
-command -v aws >/dev/null || { echo "aws is required"; exit 1; }
-command -v bosh >/dev/null || { echo "bosh is required"; exit 1; }
-command -v jq >/dev/null || { echo "jq is required"; exit 1; }
-command -v spiff >/dev/null || { echo "spiff is required"; exit 1; }
+require_command aws
+require_command bosh-init
+require_command jq
+require_command spiff
 
 mkdir -p ${DEPLOYMENT_DIR}/artifacts/deployments
 mkdir -p generated-stubs
@@ -67,8 +70,8 @@ if [ "$(ls -A ${DEPLOYMENT_DIR}/stubs/datadog)" ]; then
 fi
 
 echo "# GENERATED, NO TOUCHING" > ${DEPLOYMENT_DIR}/artifacts/deployments/concourse.yml
-spiff merge ${script_dir}/../templates/infrastructure/mask.yml \
-  ${script_dir}/../templates/infrastructure/concourse.yml \
+spiff merge ${scripts_dir}/../templates/infrastructure/mask.yml \
+  ${scripts_dir}/../templates/infrastructure/concourse.yml \
   generated-stubs/director_uuid.yml \
   generated-stubs/cloud_properties.yml \
   ${DEPLOYMENT_DIR}/stubs/concourse/*.yml \

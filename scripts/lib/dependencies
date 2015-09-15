@@ -26,6 +26,9 @@ require_aws_environment() {
     echo 'AWS_DEFAULT_REGION is not set'
     exit 1
   fi
+
+  require_aws_environment() { : ; } # Rash's dirty memoisation. Makes the function a no-op
+
   set -x
 }
 
@@ -48,4 +51,11 @@ require_bosh_environment() {
     exit 1
   fi
   set -x
+
+  require_bosh_environment() { : ; } # Rash's dirty memoisation. Makes the function a no-op
+
+}
+
+require_command() {
+  command -v $1 >/dev/null || { echo "$1 is required"; exit 1; }
 }

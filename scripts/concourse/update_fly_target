@@ -1,12 +1,16 @@
 #!/bin/bash
 
+############
+# SETUP
+
 set -e -x
+scripts_dir=$(cd $(dirname $0)/..; pwd)
+source ${scripts_dir}/lib/dependencies
 
-script_dir=$(dirname $0)
-source ${script_dir}/lib/deployment_utils
+############
 
-command -v jq >/dev/null || { echo "jq is required"; exit 1; }
-command -v yaml2json >/dev/null || { echo "yaml2json is required"; exit 1; }
+require_command jq
+require_command yaml2json
 
 require_deployment_dir
 

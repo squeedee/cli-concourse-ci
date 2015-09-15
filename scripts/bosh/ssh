@@ -1,10 +1,13 @@
 #!/bin/bash
 
+############
+# SETUP
+
 set -e -x
+scripts_dir=$(cd $(dirname $0)/..; pwd)
+source ${scripts_dir}/lib/dependencies
 
-script_dir=$(dirname $0)
-
-source ${script_dir}/lib/deployment_utils
+############
 
 require_deployment_dir
 

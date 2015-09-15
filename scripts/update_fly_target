@@ -25,7 +25,12 @@ if [ ! -f ${concourse_properties_file} ]; then
   usage_api_target
 fi
 
-api_target=`cat ${concourse_properties_file} | jq -r '.[] | select(.ParameterKey == "ELBRecordSetName") | .ParameterValue'`
+api_target=`cat ${concourse_properties_file} | jq -r '
+  .[] |
+  select(.ParameterKey == "ELBRecordSetName") |
+  .ParameterValue |
+  gsub("\\\\.$"; "")
+'`
 
 if [ -z "${api_target}" ] || [ "${api_target}" == "null" ]; then
   usage_api_target
@@ -62,7 +67,7 @@ if [ -z "${atc_password}" ] || [ "${atc_password}" == "null" ]; then
   usage_api_credentials "basic_auth_password not set"
 fi
 
-fly save-target cli --api ${api_target} --username ${atc_username} --password ${atc_password}
+fly save-target cli --api https://${api_target} --username ${atc_username} --password ${atc_password}
 
 echo "forcing a newline, see https://github.com/concourse/fly/issues/26"
 cat ~/.flyrc

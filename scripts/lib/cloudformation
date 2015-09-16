@@ -22,15 +22,15 @@ cloud_form() {
         --template-body file://${formation_path}
     fi
   else
-    if [ -e ${DEPLOYMENT_DIR}/cloud_formation/properties.json ]; then
+    if [ -e ${properties_path} ]; then
       aws cloudformation update-stack \
         --stack-name ${stack_name} \
         --template-body file://${formation_path} \
         --parameters file://${properties_path} || true # update-stack is not idempotent :(
     else
       aws cloudformation update-stack \
-            --stack-name ${stack_name} \
-            --template-body file://${formation_path} || true # update-stack is not idempotent :(
+        --stack-name ${stack_name} \
+        --template-body file://${formation_path} || true # update-stack is not idempotent :(
     fi
   fi
 

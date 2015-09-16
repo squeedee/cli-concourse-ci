@@ -21,7 +21,6 @@ require_command spiff
 
 mkdir -p ${DEPLOYMENT_DIR}/artifacts/keypair
 mkdir -p ${DEPLOYMENT_DIR}/artifacts/deployments
-mkdir -p ${DEPLOYMENT_DIR}/generated-stubs/cf
 mkdir -p generated-stubs
 
 # create keypair
@@ -85,13 +84,6 @@ bosh-init deploy ${DEPLOYMENT_DIR}/artifacts/deployments/bosh.yml
 # display result
 BOSH_IP=$(cat generated-stubs/bosh-aws-resources.json | jq -r .Resources.MicroEIP)
 echo "BOSH director is at $BOSH_IP"
-
-# generate director uuid stub for cf
-BOSH_DIRECTOR_UUID=$(bosh -t ${BOSH_IP} status --uuid)
-cat > ${DEPLOYMENT_DIR}/generated-stubs/cf/director-uuid.yml <<EOF
----
-director_uuid: ${BOSH_DIRECTOR_UUID}
-EOF
 
 # clean up
 rm -rf generated-stubs

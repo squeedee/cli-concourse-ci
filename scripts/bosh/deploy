@@ -19,6 +19,13 @@ require_command bosh-init
 require_command jq
 require_command spiff
 
+ruby_major_ver=`ruby -v | awk '{ print $2}' | awk -F. '{ print $1 }'`
+if [ "${ruby_major_ver}" -lt "2" ]; then
+  echo "Please use Ruby >=2.*"
+  echo "Otherwise, bosh fails to parse json templates"
+  exit 1
+fi
+
 mkdir -p ${DEPLOYMENT_DIR}/artifacts/keypair
 mkdir -p ${DEPLOYMENT_DIR}/artifacts/deployments
 mkdir -p generated-stubs

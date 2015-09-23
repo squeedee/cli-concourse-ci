@@ -23,7 +23,7 @@ usage_api_target() {
   exit 1
 }
 
-concourse_properties_file=$DEPLOYMENT_DIR/cloud_formation/properties.json
+concourse_properties_file=$DEPLOYMENT_DIR/cloud_formation/bosh_properties.json
 
 if [ ! -f ${concourse_properties_file} ]; then
   usage_api_target

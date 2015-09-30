@@ -1,0 +1,26 @@
+#!/bin/bash
+
+############
+# SETUP
+
+set -e +x
+scripts_dir=$(cd $(dirname $0)/..; pwd)
+source ${scripts_dir}/lib/dependencies
+
+############
+
+require_deployment_dir
+require_aws_environment
+
+require_command jq
+require_command aws
+
+worker_definitions=$(aws ec2 describe-instances --filters 'Name=tag:Deployment,Values=workers' 'Name=instance-state-name,Values=running')
+worker_configs=$(echo ${worker_definitions} | jq -r '.Reservations[].Instances[] | (.Tags[] | select(.Key == "Name") | .Value) + ": " + .PrivateIpAddress')
+
+${scripts_dir}/bosh/get_tunnel
+echo "****************************************"
+echo "* Worker Configs "
+echo
+echo -e "${worker_configs}"
+echo

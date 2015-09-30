@@ -9,6 +9,12 @@ cloud_form() {
   properties_path=${DEPLOYMENT_DIR}/cloud_formation/${stack_name}_properties.json
   formation_path=${scripts_dir}/../templates/infrastructure/${stack_name}_cloudformation.json
 
+  if aws cloudformation describe-stacks --stack-name ${stack_name}; then
+    while aws cloudformation describe-stacks --stack-name ${stack_name} | grep StackStatus | grep DELETE_IN_PROGRESS ; do
+      echo "CloudFormation stack '${stack_name}' is deleting..."
+      sleep 15
+    done
+  fi
 
   if ! aws cloudformation describe-stacks --stack-name ${stack_name} ; then
     if [ -e  ${properties_path} ]; then

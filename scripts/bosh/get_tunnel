@@ -1,0 +1,31 @@
+#!/bin/bash
+
+############
+# SETUP
+
+set -e
+scripts_dir=$(cd $(dirname $0)/..; pwd)
+source ${scripts_dir}/lib/dependencies
+
+############
+
+require_deployment_dir
+require_command jq
+require_command yaml2json
+
+ssh_tunnel_config=`cat ${DEPLOYMENT_DIR}/artifacts/deployments/bosh.yml | yaml2json | jq .cloud_provider.ssh_tunnel`
+
+tunnel_host=`echo ${ssh_tunnel_config} | jq -r .host`
+tunnel_port=`echo ${ssh_tunnel_config} | jq -r .port`
+tunnel_key=${DEPLOYMENT_DIR}/artifacts/deployments/`echo ${ssh_tunnel_config} | jq -r .private_key`
+tunnel_user=`echo ${ssh_tunnel_config} | jq -r .user`
+
+echo "****************************************"
+echo "* Tunnel configuration "
+echo
+echo "         host: ${tunnel_host}"
+echo "         port: ${tunnel_port}"
+echo "  private_key: ${tunnel_key}"
+echo "         user: ${tunnel_user}"
+echo
+

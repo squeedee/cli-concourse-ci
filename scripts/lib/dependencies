@@ -9,7 +9,6 @@ require_deployment_dir() {
 }
 
 require_aws_environment() {
-  set +x
   source ${DEPLOYMENT_DIR}/aws_environment
 
   if [ -z ${AWS_DEFAULT_REGION} ]; then
@@ -28,12 +27,9 @@ require_aws_environment() {
   fi
 
   require_aws_environment() { : ; } # Rash's dirty memoisation. Makes the function a no-op
-
-  set -x
 }
 
 require_bosh_environment() {
-  set +x
   source ${DEPLOYMENT_DIR}/bosh_environment
 
   if [ -z ${BOSH_USER} ]; then
@@ -50,7 +46,6 @@ require_bosh_environment() {
     echo 'BOSH_DIRECTOR is not set'
     exit 1
   fi
-  set -x
 
   require_bosh_environment() { : ; } # Rash's dirty memoisation. Makes the function a no-op
 

@@ -48,3 +48,28 @@ Windows 64 English (ROLLED): 10.0.17.150
 Windows 64 French (ROLLED): 10.0.2.109
 Windows 32 English (ROLLED): 10.0.17.110
 ```
+
+## Creating new windows workers.
+On AWS:
+
+* EC2 -> Launch Instance 
+	* Community AMIs
+		* Operating System: **Windows**
+		* Architecture: **[32|64|whatever you want :D]**
+		* Now search:
+			* 2012, R2 when possible
+			* Find the one with the latest age.
+			* Look for 'provided by Amazon'
+	* Instance Type
+		* **c3.xlarge** when available. It wont always be, try and get close.
+		* Network: use the **VPC with the 10.0.0.0/16 CIDR**
+		* Subnet: find the **concourse** subnet.
+	* Tag Instance
+		* Add tag: **Key='Deployment' Value='workers'** (this helps with the `get_workers` script)
+	* Configure Security Group
+		* choose **Select an existing security group**
+		* choose **bosh-ConcourseSecurityGroup-\***
+
+Go for it (review and launch)!
+
+## Deploying on windows

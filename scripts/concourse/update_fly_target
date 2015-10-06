@@ -3,9 +3,10 @@
 ############
 # SETUP
 
-set -e -x
+set -e +x
 scripts_dir=$(cd $(dirname $0)/..; pwd)
 source ${scripts_dir}/lib/dependencies
+source ${scripts_dir}/lib/concourse
 
 ############
 
@@ -14,32 +15,7 @@ require_command yaml2json
 
 require_deployment_dir
 
-
-### Get api target
-usage_api_target() {
-  set +x
-  echo "This script requires ${concourse_properties_file} to exist,"
-  echo "  and contain a value for 'ELBRecordSetName'"
-  exit 1
-}
-
-concourse_properties_file=$DEPLOYMENT_DIR/cloud_formation/bosh_properties.json
-
-if [ ! -f ${concourse_properties_file} ]; then
-  usage_api_target
-fi
-
-api_target=`cat ${concourse_properties_file} | jq -r '
-  .[] |
-  select(.ParameterKey == "ELBRecordSetName") |
-  .ParameterValue |
-  gsub("\\\\.$"; "")
-'`
-
-if [ -z "${api_target}" ] || [ "${api_target}" == "null" ]; then
-  usage_api_target
-fi
-
+require_concourse_api_target
 
 ### Get api credentials
 usage_api_credentials() {
@@ -51,7 +27,7 @@ usage_api_credentials() {
   exit 1
 }
 
-atc_credentials_file=$DEPLOYMENT_DIR/stubs/concourse/atc_credentials.yml
+atc_credentials_file=${DEPLOYMENT_DIR}/stubs/concourse/atc_credentials.yml
 
 
 if [ ! -f ${atc_credentials_file} ]; then
@@ -75,3 +51,6 @@ fly save-target cli --api https://${api_target} --username ${atc_username} --pas
 
 echo "forcing a newline, see https://github.com/concourse/fly/issues/26"
 cat ~/.flyrc
+
+echo
+echo "Use \`fly -t cli <command>\` to run fly with this target selected"

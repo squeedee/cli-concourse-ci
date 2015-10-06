@@ -1,0 +1,19 @@
+#!/bin/bash
+
+############
+# SETUP
+
+set -e +x
+scripts_dir=$(cd $(dirname $0)/..; pwd)
+source ${scripts_dir}/lib/dependencies
+source ${scripts_dir}/lib/concourse
+
+############
+
+require_command jq
+require_command yaml2json
+
+require_deployment_dir
+require_concourse_api_target
+
+open https://${api_target}

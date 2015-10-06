@@ -1,0 +1,31 @@
+#!/bin/bash
+
+require_command jq
+require_deployment_dir
+
+could_not_require_concourse_api_target() {
+  set +x
+  echo "This script requires $1 to exist,"
+  echo "  and contain a value for 'ELBRecordSetName'"
+  exit 1
+}
+
+# Sets $api_target to the URL for the atc
+require_concourse_api_target() {
+  local concourse_properties_file=$DEPLOYMENT_DIR/cloud_formation/bosh_properties.json
+
+  if [ ! -f ${concourse_properties_file} ]; then
+    could_not_require_concourse_api_target ${concourse_properties_file}
+  fi
+
+  api_target=`cat ${concourse_properties_file} | jq -r '
+    .[] |
+    select(.ParameterKey == "ELBRecordSetName") |
+    .ParameterValue |
+    gsub("\\\\.$"; "")
+  '`
+
+  if [ -z "${api_target}" ] || [ "${api_target}" == "null" ]; then
+    could_not_require_concourse_api_target ${concourse_properties_file}
+  fi
+}

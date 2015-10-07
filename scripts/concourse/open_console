@@ -15,5 +15,6 @@ require_command yaml2json
 
 require_deployment_dir
 require_concourse_api_target
+require_concourse_atc_credentials
 
-open https://${api_target}
+open https://${atc_username}:${atc_password}@${api_target}

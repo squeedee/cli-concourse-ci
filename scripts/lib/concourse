@@ -29,3 +29,44 @@ require_concourse_api_target() {
     could_not_require_concourse_api_target ${concourse_properties_file}
   fi
 }
+
+could_not_require_concourse_atc_credentials() {
+  set +x
+  echo "This script requires ${1} to exist,"
+  echo "  and contain a values for basic_auth_username and basic_auth_password"
+  echo
+  echo "  Error: ${2}"
+  exit 1
+}
+
+# sets ${atc_password} and ${atc_username}
+require_concourse_atc_credentials() {
+
+  local atc_credentials_file=${DEPLOYMENT_DIR}/stubs/concourse/atc_credentials.yml
+  if [ ! -f ${atc_credentials_file} ]; then
+    could_not_require_concourse_atc_credentials ${atc_credentials_file} "${atc_credentials_file} not found"
+  fi
+
+  atc_username=`cat ${atc_credentials_file} | yaml2json | jq -r .atc_credentials.basic_auth_username`
+
+  if [ -z "${atc_username}" ] || [ "${atc_username}" == "null" ]; then
+    could_not_require_concourse_atc_credentials ${atc_credentials_file} "basic_auth_username not set"
+  fi
+
+  atc_password=`cat ${atc_credentials_file} | yaml2json | jq -r .atc_credentials.basic_auth_password`
+
+  if [ -z "${atc_password}" ] || [ "${atc_password}" == "null" ]; then
+    could_not_require_concourse_atc_credentials ${atc_credentials_file} "basic_auth_password not set"
+  fi
+}
+
+require_fly_target() {
+  require_command fly
+  require_deployment_dir
+  require_concourse_api_target
+  require_concourse_atc_credentials
+
+  fly save-target cli --api https://${api_target} --username ${atc_username} --password ${atc_password}
+
+  require_fly_target() { : ; } # Rash's dirty memoisation. Makes the function a no-op
+}

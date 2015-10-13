@@ -96,7 +96,6 @@ Set-ExecutionPolicy Unrestricted -Force
 ```
 
 Pull the scripts to the machine. Windows is a pain when running scripts on foreign file systems
-
 ```posh
 New-Item $HOME\image -type directory 
 Copy-Item  \\tsclient\Home\workspace\cli-concourse-ci\images\windows64-go\* $HOME\image\ -Recurse 

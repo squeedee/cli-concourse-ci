@@ -45,8 +45,6 @@ cli-concourse-ci\scripts\workers\get_workers
 * Worker Configs
 
 Windows 64 English (ROLLED): 10.0.17.150
-Windows 64 French (ROLLED): 10.0.2.109
-Windows 32 English (ROLLED): 10.0.17.110
 ```
 
 ## Creating new windows workers.
@@ -73,3 +71,44 @@ On AWS:
 Go for it (review and launch)!
 
 ## Deploying on windows
+
+Assuming:
+  * You checked out this repo to `~/workspace/cli-concourse-ci`
+  * You mapped your home directory using remotix as described above
+  
+You will find the windows install scripts in `\\tsclient\Home\workspace\cli-concourse-ci\images\windows64-go`.
+Technically it's not an image, but the prep scripts are intended to produce a working environment that satisfies our
+need to make Windows:
+  * Act as a concourse agent
+  * Run our CI tests.
+
+### Steps to running the scripts:
+
+We recommend "Powershell ISE" over the standard powershell prompt as it allows copy and paste. To open it:
+  * Tap the `windows key` - what you get is something that behaves like Mac Spotlight.
+  * Type `ISE`
+  * Select the Powersell ISE app from the results. 
+
+Enable script execution: 
+
+```posh
+Set-ExecutionPolicy Unrestricted -Force
+```
+
+Pull the scripts to the machine. Windows is a pain when running scripts on foreign file systems
+
+```posh
+New-Item $HOME\image -type directory 
+Copy-Item  \\tsclient\Home\workspace\cli-concourse-ci\images\windows64-go\* $HOME\image\ -Recurse 
+cd $HOME\image
+```
+
+Run `pre-install` to get WMF5 set up. **This will restart the Windows machine.**
+
+```posh
+cd $HOME\image
+.\pre-install.ps1
+```
+
+When the machine restarts, you should see on the desktop background `Hostname  :  WIN64EN`
+

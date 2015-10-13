@@ -77,6 +77,10 @@ jobs:
         atc:
           username: (( atc_credentials.basic_auth_username ))
           password: (( atc_credentials.basic_auth_password ))
+
+        authorized_keys:
+          - (( atc_worker_keys.windows ))
+
       consul:
         agent:
           servers: {lan: (( jobs.discovery.networks.concourse.static_ips ))}
@@ -175,5 +179,6 @@ update:
 
 cloud_properties: (( merge ))
 atc_credentials: (( merge ))
+atc_worker_keys: (( merge ))
 datadog_properties: (( merge || nil ))
 syslog_properties: (( merge || nil ))

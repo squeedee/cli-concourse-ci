@@ -48,6 +48,8 @@ AWS_ZONE=$(aws ec2 describe-subnets --subnet-ids ${SUBNET_ID} | jq -r .Subnets[0
 
 LOAD_BALANCER=$(cat generated-stubs/bosh-aws-resources.json | jq -r .Resources.ConcourseLoadBalancer)
 
+
+# Generate cloud properties file
 cat > generated-stubs/cloud_properties.yml <<EOF
 ---
 cloud_properties:
@@ -55,6 +57,23 @@ cloud_properties:
   subnet_id: ${SUBNET_ID}
   az: ${AWS_ZONE}
   load_balancer: ${LOAD_BALANCER}
+EOF
+
+# Generate a Concourse worker key for vpc workers
+windows_worker_key_path=${DEPLOYMENT_DIR}/artifacts/keypair/id_rsa_concourse_windows_workers
+
+if [ ! -f "$windows_worker_key_path" ]; then
+  ssh-keygen -C concourse-vpc-workers -f ${windows_worker_key_path} -N "" -I Win64En
+fi
+
+chmod 600 ${windows_worker_key_path}
+
+windows_worker_public_key=$(ssh-keygen -y -f ${windows_worker_key_path})
+
+cat > generated-stubs/concourse_properties.yml <<EOF
+---
+atc_worker_keys:
+  windows: ${windows_worker_public_key}
 EOF
 
 # Generate Concourse manifest
@@ -73,6 +92,7 @@ spiff merge ${scripts_dir}/../templates/infrastructure/mask.yml \
   ${scripts_dir}/../templates/infrastructure/concourse.yml \
   generated-stubs/director_uuid.yml \
   generated-stubs/cloud_properties.yml \
+  generated-stubs/concourse_properties.yml \
   ${DEPLOYMENT_DIR}/stubs/concourse/*.yml \
   ${optional_datadog} \
   ${optional_syslog} \

@@ -1,0 +1,91 @@
+---
+groups:
+- name: cli
+  jobs:
+  - rc
+  - linux64-go-image
+  - unit-linux64
+
+- name: images
+  jobs:
+  - linux64-go-image
+
+- name: units
+  jobs:
+  - unit-linux64
+
+resources:
+- name: cli
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry/cli
+    branch: master
+
+- name: cli-ci-secrets
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/cli-ci.git
+    branch: cli-ci-secrets
+    private_key: {{cli-ci-repo-private-key}}
+
+- name: cli-concourse-ci
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry/cli-concourse-ci
+    branch: unit-tests
+
+- name: linux64-go-image
+  type: docker-image
+  source:
+    repository: cloudfoundry/cli-linux64-go-ci
+    email: {{dockerhub-email}}
+    username: {{dockerhub-username}}
+    password: {{dockerhub-password}}
+
+- name: version
+  type: semver
+  source:
+    bucket: {{assets-bucket-name}}
+    key: current-version
+    initial_version: 6.11.1
+    access_key_id: {{assets-bucket-access-key-id}}
+    secret_access_key: {{assets-bucket-secret-access-key}}
+
+jobs:
+- name: rc
+  serial: true
+  plan:
+  - aggregate:
+    - get: cli
+      trigger: true
+    - get: version
+      params: {pre: plus}
+      trigger: false
+  - put: version
+    params: {file: version/number}
+
+- name: linux64-go-image
+  serial: true
+  plan:
+  - get: cli-concourse-ci
+    trigger: true
+  - put: linux64-go-image
+    params:
+      cache: true
+      build: cli-concourse-ci/images/linux64-go
+
+- name: unit-linux64
+  plan:
+  - get: linux64-go-image
+    passed: [linux64-go-image]
+    trigger: true
+  - get: cli
+    passed: [rc]
+    trigger: false
+  - get: cli-concourse-ci
+    trigger: false
+  - get: version
+    passed: [rc]
+    trigger: true
+  - task: unit-tests
+    file: cli-concourse-ci/pipelines/main/unit/linux64.yml

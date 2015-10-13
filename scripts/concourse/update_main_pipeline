@@ -14,11 +14,10 @@ require_command jq
 require_command yaml2json
 
 require_deployment_dir
-
 require_concourse_api_target
 
-echo "forcing a newline, see https://github.com/concourse/fly/issues/26"
-cat ~/.flyrc
+fly -t cli c main -c ${scripts_dir}/../pipelines/main.yml \
+  --vars-from ${DEPLOYMENT_DIR}/pipeline_vars/cli_asset_buckets.yml \
+  --vars-from ${DEPLOYMENT_DIR}/pipeline_vars/github_keys.yml \
+  --vars-from ${DEPLOYMENT_DIR}/pipeline_vars/dockerhub_credentials.yml
 
-echo
-echo "Use \`fly -t cli <command>\` to run fly with this target selected"

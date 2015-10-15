@@ -112,3 +112,19 @@ cd $HOME\image
 
 When the machine restarts, you should see on the desktop background `Hostname  :  WIN64EN`
 
+Run `install` to get:
+  * golang
+  * houdini
+  * houdini automated at startup
+  * putty
+  * automated ssh callback to concourse
+
+```posh
+cd $HOME\image
+.\install.ps1 <ip-of-atc> <deployment-dir>
+```
+
+Where:
+   * `<ip-of-atc>` is the private ip of one of the atc machines.
+   * `<deployment-dir>` is the path to your local machine deployment dir.
+     * eg: `\\tsclient\Home\workspace\cli-ci`

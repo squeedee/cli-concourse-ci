@@ -1,0 +1,9 @@
+---
+platform: windows
+
+inputs:
+  - name: cli
+    path: gopath/src/github.com/cloudfoundry/cli
+  - name: version
+
+run: # no idea

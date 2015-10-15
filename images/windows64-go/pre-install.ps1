@@ -10,7 +10,7 @@ Param(
 
 # Restart Transcript
 Stop-Transcript
-Start-Transcript -Path C:\Windows\Temp\preinstall.txt -Force
+Start-Transcript -Path C:\Users\Administrator\image\preinstall.txt -Force
 
 # everyone needs a little help
 Update-Help -Force

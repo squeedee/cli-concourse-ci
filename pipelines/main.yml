@@ -32,7 +32,7 @@ resources:
   type: git
   source:
     uri: https://github.com/cloudfoundry/cli-concourse-ci
-    branch: unit-tests
+    branch: master
 
 - name: linux64-go-image
   type: docker-image
